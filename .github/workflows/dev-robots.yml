@@ -11,6 +11,7 @@ jobs:
       runs-on: ubuntu-latest
       steps:
        # chachu
+       #nknckhi
 #       - name: Get vault secrets
 #         id: secrets
 #         uses: hashicorp/vault-action@v2.3.0
