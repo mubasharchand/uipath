@@ -1,0 +1,261 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "orchestratorUrl": {
+        "type": "String",
+        "metadata": {
+          "description": "Orchestrator URL."
+        }
+      },
+      "orchAdmin": {
+        "type": "string",
+        "defaultValue": "admin",
+        "metadata": {
+          "description": "User admin of the orchestrator."
+        }
+      },
+      "orchPassword": {
+        "type": "string",
+        "metadata": {
+          "description": "Password for the orchestrator."
+        }
+      },
+      "Tennant": {
+        "type": "string",
+        "defaultValue": "default",
+        "metadata": {
+          "description": "Orchestrator Tennant"
+        }
+      },
+      "RobotType": {
+        "type": "string",
+        "defaultValue": "Unattended",
+        "allowedValues": [
+          "Unattended",
+          "Development",
+          "Nonproduction",
+          "Attended"
+        ],
+        "metadata": {
+          "description": "Robot Type"
+        }
+      },
+      "addRobotsToExistingEnvs": {
+          "type": "string",
+          "defaultValue": "No",
+          "allowedValues": [
+              "Yes",
+              "No"
+          ],
+          "metadata": {
+              "description": "Add Robots to all Existing Environments"
+          }
+      },
+      "adminUsername": {
+        "type": "String",
+        "metadata": {
+          "description": "VMs Admin username"
+        }
+      },
+      "adminPassword": {
+        "type": "String",
+        "metadata": {
+          "description": "VMs Admin password"
+        }
+      },
+      "virtualMachineSize": {
+        "defaultValue": "Standard_B2s",
+        "allowedValues": [
+          "Standard_B2s",
+          "Standard_F4s"
+        ],
+        "type": "String"
+      },
+      "vmssName": {
+        "type": "string",
+        "metadata": {
+          "description": "DNS name used for public IP addresses and as base for naming other resources. Must be globally unique and 3 to 61 characters long."
+        },
+        "minLength": 3,
+        "maxLength": 61
+      },
+      "vnetCIDR": {
+        "type": "string",
+        "metadata": {
+          "description": "CIDR Block used for the vnet."
+        },
+        "minLength": 3,
+        "maxLength": 20
+      },
+      "appName": {
+        "type": "string",
+        "metadata": {
+          "description": "The name of the application: UIPath."
+        },
+        "minLength": 3,
+        "maxLength": 61
+      },
+      "envIdentifier": {
+        "type": "string",
+        "metadata": {
+          "description": "Identifier to distinguish between NP and Prod."
+        },
+        "minLength": 1,
+        "maxLength": 16
+      },
+      "virtualMachineSize": {
+        "defaultValue": "Standard_B2s",
+        "allowedValues": [
+          "Standard_B2s",
+          "Standard_F4s"
+        ],
+        "type": "String"
+      },
+      "instanceCount": {
+        "type": "int",
+        "metadata": {
+          "description": "Number of VM instances (100 or less)"
+        },
+        "minValue": 1,
+        "maxValue": 100
+      }
+    },
+    "variables": {
+      "scriptUriBase": "https://raw.githubusercontent.com/UiPath/Infrastructure/master/Setup/Install-UiRobot.ps1",
+      "HostingType": "Standard",
+      "CredentialType": "Default",
+      "scriptUriNamePieces": "[split(variables('scriptUriBase'), '/')]",
+      "scriptFileString": "[variables('scriptUriNamePieces')[sub(length(variables('scriptUriNamePieces')), 1)]]",
+      "scriptFileBreakString": "[split(variables('scriptFileString'), '?')]",
+      "scriptFileName": "[variables('scriptFileBreakString')[0]]",
+      "attendedBot": "[concat ('powershell -ExecutionPolicy Unrestricted -File ',' ', variables('scriptFileName'),' ','-orchestratorUrl',' ',parameters('orchestratorUrl'),' ','-Tennant',' ',parameters('Tennant'),' ','-orchAdmin',' ',parameters('orchAdmin'),' ','-orchPassword',' ',parameters('orchPassword'),' ','-HostingType',' ',variables('HostingType'),' ','-RobotType',' ',parameters('RobotType'),' ','-adminUsername',' ',parameters('adminUsername'))]",
+      "unattendedBot": "[concat ('powershell -ExecutionPolicy Unrestricted -File ',' ', variables('scriptFileName'),' ','-orchestratorUrl',' ',parameters('orchestratorUrl'),' ','-Tennant',' ',parameters('Tennant'),' ','-orchAdmin',' ',parameters('orchAdmin'),' ','-orchPassword',' ',parameters('orchPassword'),' ','-HostingType',' ',variables('HostingType'),' ','-RobotType',' ',parameters('RobotType'),' ','-adminUsername',' ',parameters('adminUsername'),' ','-machinePassword',' ',parameters('adminPassword'),' ','-credType',' ',variables('CredentialType'),' ','-addRobotsToExistingEnvs',' ',parameters('addRobotsToExistingEnvs'))]",
+      "windowsOSV": "2016-Datacenter",
+      "osDiskType": "StandardSSD_LRS",
+      "location": "[resourceGroup().location]",
+      "namingInfix": "[toLower(substring(concat(parameters('vmssName'), uniqueString(resourceGroup().id)), 0, 9))]",
+      "vhdContainerName": "[concat(variables('namingInfix'), '-vhd')]",
+      "osDiskName": "[concat(variables('namingInfix'), 'osdisk')]",
+      "addressPrefix": "[parameters('vnetCIDR')]",
+      "subnetPrefix": "[parameters('vnetCIDR')]",
+      "virtualNetworkName": "[concat(parameters('appName'), '-', parameters('envIdentifier'), '-vnet')]",
+      "publicIPAddressName": "[concat(variables('namingInfix'), '-pip')]",
+      "subnetName": "[concat(variables('namingInfix'), '-subnet')]",
+      "nicName": "[concat(variables('namingInfix'), '-nic')]",
+      "ipConfigName": "[concat(variables('namingInfix'), '-ipconfig')]",
+      "osType": {
+        "publisher": "MicrosoftWindowsServer",
+        "offer": "WindowsServer",
+        "sku": "[variables('windowsOSV')]",
+        "version": "latest"
+      },
+      "imageReference": "[variables('osType')]",
+      "virtualNetworkResourceId": "[concat(resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName')), '/subnets/', variables('subnetName'))]"
+    },
+    "resources": [
+      {
+        "type": "Microsoft.Network/virtualNetworks",
+        "name": "[variables('virtualNetworkName')]",
+        "location": "[variables('location')]",
+        "apiVersion": "2021-02-01",
+        "tags": {
+          "displayName": "VirtualNetwork"
+        },
+        "properties": {
+          "addressSpace": {
+            "addressPrefixes": [
+              "[variables('addressPrefix')]"
+            ]
+          },
+          "subnets": [
+            {
+              "name": "[variables('subnetName')]",
+              "properties": {
+                "addressPrefix": "[variables('subnetPrefix')]"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "type": "Microsoft.Compute/virtualMachineScaleSets",
+        "name": "[variables('namingInfix')]",
+        "location": "[variables('location')]",
+        "apiVersion": "2021-07-01",
+        "tags": {
+          "displayName": "VMScaleSet"
+        },
+        "dependsOn": [
+          "[resourceId('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+        ],
+        "sku": {
+          "name": "[parameters('virtualMachineSize')]",
+          "tier": "Standard",
+          "capacity": "[parameters('instanceCount')]"
+        },
+        "properties": {
+          "overprovision": "true",
+          "upgradePolicy": {
+            "mode": "Automatic"
+          },
+          "virtualMachineProfile": {
+            "storageProfile": {
+              "osDisk": {
+                "createOption": "fromImage",
+                "managedDisk": {
+                  "storageAccountType": "[variables('osDiskType')]"
+                }
+              },
+              "imageReference": "[variables('imageReference')]"
+            },
+            "osProfile": {
+              "computerNamePrefix": "[variables('namingInfix')]",
+              "adminUsername": "[parameters('adminUsername')]",
+              "adminPassword": "[parameters('adminPassword')]"
+            },
+            "networkProfile": {
+              "networkInterfaceConfigurations": [
+                {
+                  "name": "[variables('nicName')]",
+                  "properties": {
+                    "primary": true,
+                    "ipConfigurations": [
+                      {
+                        "name": "[variables('ipConfigName')]",
+                        "properties": {
+                          "subnet": {
+                            "id": "[variables('virtualNetworkResourceId')]"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "extensionProfile": {
+              "extensions": [
+                {
+                  "name": "CustomScriptExtension",
+                  "properties": {
+                    "publisher": "Microsoft.Compute",
+                    "type": "CustomScriptExtension",
+                    "typeHandlerVersion": "1.4",
+                    "autoUpgradeMinorVersion": true,
+                    "settings": {
+                      "fileUris": "[split(variables('scriptUriBase'), ' ')]"
+                    },
+                    "protectedSettings": {
+                      "commandToExecute": "[if(equals(parameters('RobotType'), 'Attended'),variables('attendedBot'),variables('unattendedBot'))]"
+                    }
+                  }
+                }
+  
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }

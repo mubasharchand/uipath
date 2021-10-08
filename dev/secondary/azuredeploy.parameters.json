@@ -1,0 +1,30 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "appName": {
+        "value": "uipathfrontladev"  // The app name should be same as Pimary
+      },
+      "orchestratorVersion": {
+        "value": "19.4.4"
+      },
+      "orchestratorSize": {
+        "value": "large"
+      },
+      "orchestratorInstances": {
+        "value": 2
+      },
+      "SQLServerName": {
+        "value": "uipathserversql1dev"   // The db name should be same as Pimary
+      },
+      "SQLServerDBName": {
+        "value": "uipathserversql1devdb"  // The db server name should be same as Pimary
+      },
+      "SQLServerAdminLogin": {
+        "value": "denim"                  // The credentials should be same as Pimary
+      },
+      "SQLServerAdminPassword": {
+        "value": "HIGHsecurep@11"         // The credentials should be same as Pimary
+      }
+    }
+  }

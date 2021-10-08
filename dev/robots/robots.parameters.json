@@ -1,0 +1,39 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "orchestratorUrl": {
+        "value": "https://uipathfrontladev.azurewebsites.net"
+      },
+      "orchAdmin": {
+        "value": "admin"
+      },
+      "orchPassword": {
+        "value": "HIGHsecurep@11"
+      },
+      "adminUsername": {
+        "value": "denim"
+      },
+      "adminPassword": {
+        "value": "HIGHsecurep@11"
+      },
+      "vmssName": {
+        "value": "uipathvmssmac"
+      },
+      "appName": {
+        "value": "uipath"
+      },
+      "envIdentifier": {
+        "value": "np"
+      },
+      "virtualMachineSize": {
+        "value": "Standard_B2s"
+      },
+      "instanceCount": {
+        "value": 2
+      },
+      "vnetCIDR": {
+        "value": "10.233.213.128/26"
+      } 
+    }
+  }

@@ -1,0 +1,30 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "appName": {
+        "value": "uipathfrontladev"
+      },
+      "orchestratorVersion": {
+        "value": "19.4.4"
+      },
+      "orchestratorSize": {
+        "value": "large"
+      },
+      "orchestratorInstances": {
+        "value": 3
+      },
+      "SQLServerName": {
+        "value": "uipathserversql1dev"
+      },
+      "SQLServerDBName": {
+        "value": "uipathserversql1devdb"
+      },
+      "SQLServerAdminLogin": {
+        "value": "denim"
+      },
+      "SQLServerAdminPassword": {
+        "value": "HIGHsecurep@11"
+      }
+    }
+  }
