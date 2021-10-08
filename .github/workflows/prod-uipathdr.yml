@@ -1,0 +1,38 @@
+# This is a basic workflow to help you get started with Actions
+name: UIpath Disaster Recovery PROD
+# Controls when the action will run. 
+on:
+  push:
+    branches:
+      - master
+    paths:
+      -  prod/secondary/**
+jobs:
+    deploy:
+      runs-on: [self-hosted, linux, X64, azure]
+      steps:
+      - name: Get vault secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2.3.0
+        with:
+          url: https://vault.tools.dcsg.com
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets: |
+            concourse/integration/uipath/azure/prodjson-dr AZURE_CREDENTIALS_DR | AZURE_CREDENTIALS_DR_PRD 
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ steps.secrets.outputs.AZURE_CREDENTIALS_DR_PRD }}
+      - name: Checkout source code
+        uses: actions/checkout@v2
+      - name: Deploy ARM Template
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az deployment group create \
+            --name uipathdr \
+            --resource-group ES-RPA-PROD-DR \
+            --template-file armtemplates/uipathdr.json \
+            --parameters '@prod/secondary/azuredeploy.parameters.json' --verbose

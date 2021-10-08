@@ -1,0 +1,37 @@
+name: UIpath Primary  PROD
+# Controls when the action will run. 
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - prod/primary/**
+jobs:
+    deploy:
+      runs-on: [self-hosted, linux, X64, azure]
+      steps:
+      - name: Get vault secrets
+        id: secrets
+        uses: hashicorp/vault-action@v2.3.0
+        with:
+          url: https://vault.tools.dcsg.com
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets: |
+            concourse/integration/uipath/azure/prodjson AZURE_CREDENTIALS | AZURE_CREDENTIALS_PRI_PRD 
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ steps.secrets.outputs.AZURE_CREDENTIALS_PRI_PRD }}
+      - name: Checkout source code
+        uses: actions/checkout@v2
+      - name: Deploy ARM Template
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az deployment group create \
+            --name uipathprimary \
+            --resource-group ES-RPA-PROD \
+            --template-file armtemplates/uipath.json \
+            --parameters '@prod/primary/azuredeploy.parameters.json'
