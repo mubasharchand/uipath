@@ -10,20 +10,20 @@ jobs:
     deploy:
       runs-on: [self-hosted, linux, X64, azure]
       steps:
-      - name: Get vault secrets
-        id: secrets
-        uses: hashicorp/vault-action@v2.3.0
-        with:
-          url: https://vault.tools.dcsg.com
-          method: approle
-          roleId: ${{ secrets.VAULT_ROLE_ID }}
-          secretId: ${{ secrets.VAULT_SECRET_ID }}
-          secrets: |
-            concourse/integration/uipath/azure/prodjson AZURE_CREDENTIALS | AZURE_CREDENTIALS_PRI_PRD 
+#       - name: Get vault secrets
+#         id: secrets
+#         uses: hashicorp/vault-action@v2.3.0
+#         with:
+#           url: https://vault.tools.dcsg.com
+#           method: approle
+#           roleId: ${{ secrets.VAULT_ROLE_ID }}
+#           secretId: ${{ secrets.VAULT_SECRET_ID }}
+#           secrets: |
+#             concourse/integration/uipath/azure/prodjson AZURE_CREDENTIALS | AZURE_CREDENTIALS_PRI_PRD 
       - name: Login to Azure
         uses: azure/login@v1
         with:
-          creds: ${{ steps.secrets.outputs.AZURE_CREDENTIALS_PRI_PRD }}
+          creds: ${{ secrets.AZURE_CREDENTIALS_PROD }}
       - name: Checkout source code
         uses: actions/checkout@v2
       - name: Deploy ARM Template
