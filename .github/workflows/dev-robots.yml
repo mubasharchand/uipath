@@ -10,6 +10,7 @@ jobs:
     deploy:
       runs-on: ubuntu-latest
       steps:
+       # chachu
 #       - name: Get vault secrets
 #         id: secrets
 #         uses: hashicorp/vault-action@v2.3.0
