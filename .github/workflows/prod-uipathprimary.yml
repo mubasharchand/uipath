@@ -8,7 +8,7 @@ on:
       - prod/primary/**
 jobs:
     deploy:
-      runs-on: [self-hosted, linux, X64, azure]
+      runs-on: ubuntu-latest
       steps:
 #       - name: Get vault secrets
 #         id: secrets
